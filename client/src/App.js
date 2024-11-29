@@ -1,11 +1,9 @@
 import axios from 'axios';
 import './App.css';
 
-//data will be the string we send from our server
-const apiCall = () => {
-  axios.get('http://localhost:8080').then((data) => {
-    //this console.log will be in our frontend console
-    console.log(data)
+const coinCall = () => {
+  axios.get('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1').then((data) => {
+    console.log(data);
   })
 }
 
@@ -14,7 +12,7 @@ function App() {
     <div className="App">
       <header className="App-header">
 
-        <button onClick={apiCall}>Make API Call</button>
+        <button onClick={coinCall}>Make API Call</button>
 
       </header>
     </div>
