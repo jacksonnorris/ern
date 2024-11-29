@@ -12,6 +12,8 @@ app.listen(8080, () => {
     console.log('server listening on port 8080')
 })
 
-app.get('/coins', (req, res) => {
-    console.log('getting coins');
+
+// like a coin
+app.post('/like/:id', (req, res) => {
+    res.send("you have liked a coin");
 })
