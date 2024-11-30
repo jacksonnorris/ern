@@ -2,6 +2,7 @@ const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
 const session = require('express-session');
+const mongoose = require('mongoose');
 
 const app = express();
 
@@ -9,42 +10,77 @@ app.use(cors({ credentials: true, origin: 'http://localhost:3000' }));
 app.use(express.json());
 app.use(
   session({
-    secret: 'hJf73#9LmXpz!4QaB@d6WrkTY$Xv2&CE', // Random Key (should use a env file in the future)
+    secret: 'hJf73#9LmXpz!4QaB@d6WrkTY$Xv2&CE', //random string but should change in future for better security
     resave: false,
-    saveUninitialized: true,
-    cookie: { secure: false, maxAge: 24 * 60 * 60 * 1000 }, 
+    saveUninitialized: false,
+    cookie: {
+      secure: false, 
+      httpOnly: true,
+      maxAge: 60 * 60 * 1000, // 1 hour expiration
+    },
   })
 );
+
+const mongoURI = 'mongodb+srv://dannyw0717:388VrMxIBbWhvzlN@cluster0.i9sex.mongodb.net/cryptoApp?retryWrites=true&w=majority';
+mongoose
+  .connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => {
+    console.log('Connected to Dannys MongoDB :)');
+    app.listen(8080, () => {
+      console.log('Server listening on port 8080');
+    });
+  })
+  .catch((err) => {
+    console.error('MongoDB connection error:', err);
+  });
+
+const UserSchema = new mongoose.Schema({
+  username: { type: String, required: true, unique: true },
+  likedCoins: [
+    {
+      id: String,
+      name: String,
+      price: Number,
+    },
+  ],
+});
+
+const User = mongoose.model('User', UserSchema);
 
 let cachedCoins = null;
 let cacheTimestamp = 0;
 
-const userPreferences = {};
-
 app.get('/api/coins', async (req, res) => {
-  const { page = 1, perPage = 50 } = req.query;
+  const { page = 1, perPage = 50, search = '' } = req.query;
   const now = Date.now();
 
   if (cachedCoins && now - cacheTimestamp < 60 * 1000) {
     console.log('Serving coins from cache');
+    let filteredCoins = cachedCoins;
+
+    if (search) {
+      filteredCoins = cachedCoins.filter((coin) =>
+        coin.name.toLowerCase().includes(search.toLowerCase())
+      );
+    }
+
     const start = (page - 1) * perPage;
     const end = start + perPage;
     return res.status(200).json({
-      coins: cachedCoins.slice(start, end),
-      totalPages: Math.ceil(cachedCoins.length / perPage),
+      coins: filteredCoins.slice(start, end),
+      totalPages: Math.ceil(filteredCoins.length / perPage),
     });
   }
 
   try {
-    console.log(`Fetching coins from CoinGecko: Page ${page}, Per Page ${perPage}`);
     const response = await axios.get(
       'https://api.coingecko.com/api/v3/coins/markets',
       {
         params: {
           vs_currency: 'usd',
           order: 'market_cap_desc',
-          per_page: 250, 
-          page: 1, // Always fetch the first page for caching
+          per_page: 250,
+          page: 1,
         },
       }
     );
@@ -52,36 +88,61 @@ app.get('/api/coins', async (req, res) => {
     cachedCoins = response.data;
     cacheTimestamp = now;
 
+    let filteredCoins = cachedCoins;
+
+    if (search) {
+      filteredCoins = cachedCoins.filter((coin) =>
+        coin.name.toLowerCase().includes(search.toLowerCase())
+      );
+    }
+
     const start = (page - 1) * perPage;
     const end = start + perPage;
     res.status(200).json({
-      coins: cachedCoins.slice(start, end),
-      totalPages: Math.ceil(cachedCoins.length / perPage),
+      coins: filteredCoins.slice(start, end),
+      totalPages: Math.ceil(filteredCoins.length / perPage),
     });
   } catch (error) {
     console.error('Error fetching coins from CoinGecko:', error.message);
-    if (error.response) {
-      console.error('CoinGecko API Response:', error.response.data);
-    }
     res.status(500).json({ message: 'Failed to fetch coins' });
   }
 });
 
-app.post('/login', (req, res) => {
+app.post('/login', async (req, res) => {
   const { username } = req.body;
   if (!username) {
-    return res.status(400).json({ message: 'Username required' });
+    return res.status(400).json({ message: 'Username is required' });
   }
 
-  req.session.username = username;
-  if (!userPreferences[username]) {
-    userPreferences[username] = { likedCoins: [] };
-  }
+  try {
+    let user = await User.findOne({ username });
+    if (!user) {
+      user = new User({ username, likedCoins: [] });
+      await user.save();
+    }
 
-  res.status(200).json({
-    message: `Welcome, ${username}!`,
-    likedCoins: userPreferences[username].likedCoins,
-  });
+    req.session.username = username; 
+    res.status(200).json({
+      message: `Welcome, ${username}!`,
+      likedCoins: user.likedCoins,
+    });
+  } catch (error) {
+    console.error('Error during login:', error);
+    res.status(500).json({ message: 'Failed to log in' });
+  }
+});
+
+app.get('/check-session', (req, res) => {
+  if (req.session.username) {
+    res.status(200).json({
+      loggedIn: true,
+      username: req.session.username,
+    });
+  } else {
+    res.status(200).json({
+      loggedIn: false,
+    });
+  }
 });
 
 app.post('/like/:id', async (req, res) => {
@@ -89,49 +150,68 @@ app.post('/like/:id', async (req, res) => {
   if (!username) return res.status(401).json({ message: 'User not logged in' });
 
   const coinId = req.params.id;
-  const likedCoins = userPreferences[username].likedCoins;
 
   try {
-    const response = await axios.get(
-      'https://api.coingecko.com/api/v3/coins/markets',
-      { params: { vs_currency: 'usd', ids: coinId } }
-    );
+    const user = await User.findOne({ username });
+    if (!user) return res.status(404).json({ message: 'User not found' });
 
-    const coinData = response.data[0];
-    if (!likedCoins.some((coin) => coin.id === coinId)) {
-      likedCoins.push({
+    const isAlreadyLiked = user.likedCoins.some((coin) => coin.id === coinId);
+    if (!isAlreadyLiked) {
+      const response = await axios.get(
+        'https://api.coingecko.com/api/v3/coins/markets',
+        { params: { vs_currency: 'usd', ids: coinId } }
+      );
+
+      const coinData = response.data[0];
+      user.likedCoins.push({
         id: coinId,
         name: coinData.name,
         price: coinData.current_price,
       });
+
+      await user.save();
     }
 
-    res.status(200).json({ likedCoins });
+    res.status(200).json({ likedCoins: user.likedCoins });
   } catch (error) {
     console.error('Error liking coin:', error.message);
     res.status(500).json({ message: 'Failed to like coin' });
   }
 });
 
-app.get('/liked-coins', (req, res) => {
-  const username = req.session.username;
-  if (!username) return res.status(401).json({ message: 'User not logged in' });
-
-  res.status(200).json(userPreferences[username].likedCoins);
-});
-
-app.delete('/like/:id', (req, res) => {
+app.delete('/like/:id', async (req, res) => {
   const username = req.session.username;
   if (!username) return res.status(401).json({ message: 'User not logged in' });
 
   const coinId = req.params.id;
-  const likedCoins = userPreferences[username].likedCoins;
 
-  userPreferences[username].likedCoins = likedCoins.filter(
-    (coin) => coin.id !== coinId
-  );
+  try {
+    const user = await User.findOne({ username });
+    if (!user) return res.status(404).json({ message: 'User not found' });
 
-  res.status(200).json({ likedCoins: userPreferences[username].likedCoins });
+    user.likedCoins = user.likedCoins.filter((coin) => coin.id !== coinId);
+    await user.save();
+
+    res.status(200).json({ likedCoins: user.likedCoins });
+  } catch (error) {
+    console.error('Error unliking coin:', error);
+    res.status(500).json({ message: 'Failed to unlike coin' });
+  }
+});
+
+app.get('/liked-coins', async (req, res) => {
+  const username = req.session.username;
+  if (!username) return res.status(401).json({ message: 'User not logged in' });
+
+  try {
+    const user = await User.findOne({ username });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    res.status(200).json(user.likedCoins);
+  } catch (error) {
+    console.error('Error fetching liked coins:', error);
+    res.status(500).json({ message: 'Failed to fetch liked coins' });
+  }
 });
 
 app.post('/logout', (req, res) => {
@@ -142,8 +222,4 @@ app.post('/logout', (req, res) => {
     }
     res.status(200).json({ message: 'Logged out successfully' });
   });
-});
-
-app.listen(8080, () => {
-  console.log('Server listening on port 8080');
 });
