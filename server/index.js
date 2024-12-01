@@ -34,16 +34,20 @@ mongoose
     console.error('MongoDB connection error:', err);
   });
 
-const UserSchema = new mongoose.Schema({
-  username: { type: String, required: true, unique: true },
-  likedCoins: [
-    {
-      id: String,
-      name: String,
-      price: Number,
-    },
-  ],
-});
+  const UserSchema = new mongoose.Schema({
+    username: { type: String, required: true, unique: true },
+    likedCoins: [
+      {
+        id: String,
+        name: String,
+        current_price: Number,
+        market_cap: Number,
+        price_change_percentage_24h: Number,
+        total_volume: Number,
+        circulating_supply: Number
+      },
+    ],
+  });
 
 const User = mongoose.model('User', UserSchema);
 
@@ -166,7 +170,11 @@ app.post('/like/:id', async (req, res) => {
       user.likedCoins.push({
         id: coinId,
         name: coinData.name,
-        price: coinData.current_price,
+        current_price: coinData.current_price,
+        market_cap: coinData.market_cap,
+        price_change_percentage_24h: coinData.price_change_percentage_24h,
+        total_volume: coinData.total_volume,
+        circulating_supply: coinData.circulating_supply
       });
 
       await user.save();

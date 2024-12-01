@@ -14,10 +14,21 @@ function App() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem('theme') || 'light';
+  });
 
   const inactivityTimer = useRef(null);
-
   const coinsPerPage = 50;
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
+  };
 
   const autoLogout = () => {
     console.log('User inactive for 1 hour');
@@ -28,14 +39,14 @@ function App() {
     if (inactivityTimer.current) {
       clearTimeout(inactivityTimer.current);
     }
-    inactivityTimer.current = setTimeout(autoLogout, 60 * 60 * 1000); // 1 hour
+    inactivityTimer.current = setTimeout(autoLogout, 60 * 60 * 1000);
   };
 
   useEffect(() => {
     if (isLoggedIn) {
       window.addEventListener('mousemove', resetInactivityTimer);
       window.addEventListener('keypress', resetInactivityTimer);
-      resetInactivityTimer(); 
+      resetInactivityTimer();
 
       return () => {
         window.removeEventListener('mousemove', resetInactivityTimer);
@@ -111,7 +122,7 @@ function App() {
         setLikedCoins(response.data.likedCoins);
       })
       .catch((error) => {
-        console.error('Error liking the coin:', error.response?.data?.message || error.message);
+        console.error('Error liking coin:', error.response?.data?.message || error.message);
       });
   };
 
@@ -123,14 +134,14 @@ function App() {
         setLikedCoins(response.data.likedCoins);
       })
       .catch((error) => {
-        console.error('Error unliking the coin:', error.response?.data?.message || error.message);
+        console.error('Error unliking coin:', error.response?.data?.message || error.message);
       });
   };
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       fetchCoins(1, searchQuery);
-    }, 300); // Delay to reduce API calls because of rate limit for the Gecko API
+    }, 300);
 
     return () => clearTimeout(delayDebounceFn);
   }, [searchQuery]);
@@ -153,6 +164,14 @@ function App() {
 
   return (
     <div className="app-container">
+      <button 
+        className="theme-toggle" 
+        onClick={toggleTheme}
+        aria-label="Toggle theme"
+      >
+        {theme === 'light' ? '🌙' : '☀️'}
+      </button>
+
       {!isLoggedIn ? (
         <div className="login-container">
           <h1>Login</h1>
@@ -162,26 +181,52 @@ function App() {
             value={username}
             onChange={(e) => setUsername(e.target.value)}
           />
-          <button onClick={login}>Login</button>
+          <button className="primary" onClick={login}>Login</button>
         </div>
       ) : (
         <div className="dashboard-container">
           <header>
             <h1>Welcome, {username}!</h1>
-            <button onClick={logout}>Logout</button>
+            <button className="danger" onClick={logout}>Logout</button>
           </header>
 
           <section>
             <h2>Liked Coins</h2>
-            <button onClick={fetchLikedCoins}>Refresh Liked Coins</button>
-            <ul>
-              {likedCoins.map((coin) => (
-                <li key={coin.id}>
-                  {coin.name} - ${coin.price ? coin.price.toFixed(2) : 'N/A'}
-                  <button onClick={() => unlikeCoin(coin.id)}>Unlike</button>
-                </li>
-              ))}
-            </ul>
+            <button className="primary" onClick={fetchLikedCoins}>Refresh Liked Coins</button>
+            {likedCoins.length === 0 ? (
+              <p>No liked coins yet</p>
+            ) : (
+              <table>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Price</th>
+                    <th>Market Cap</th>
+                    <th>24h Change</th>
+                    <th>Volume</th>
+                    <th>Supply</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {likedCoins.map((coin) => (
+                    <tr key={coin.id}>
+                      <td>{coin.name}</td>
+                      <td>${coin.current_price ? coin.current_price.toFixed(2) : 'N/A'}</td>
+                      <td>${coin.market_cap ? coin.market_cap.toLocaleString() : 'N/A'}</td>
+                      <td className={coin.price_change_percentage_24h >= 0 ? 'positive-change' : 'negative-change'}>
+                        {coin.price_change_percentage_24h ? `${coin.price_change_percentage_24h.toFixed(2)}%` : 'N/A'}
+                      </td>
+                      <td>${coin.total_volume ? coin.total_volume.toLocaleString() : 'N/A'}</td>
+                      <td>{coin.circulating_supply ? coin.circulating_supply.toLocaleString() : 'N/A'}</td>
+                      <td>
+                        <button className="danger" onClick={() => unlikeCoin(coin.id)}>Unlike</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </section>
 
           <section>
@@ -194,7 +239,7 @@ function App() {
               className="search-bar"
             />
             {loading ? (
-              <p>Loading...</p>
+              <div className="loading"></div>
             ) : (
               <table>
                 <thead>
@@ -212,7 +257,7 @@ function App() {
                       <td>${coin.current_price ? coin.current_price.toFixed(2) : 'N/A'}</td>
                       <td>${coin.market_cap ? coin.market_cap.toLocaleString() : 'N/A'}</td>
                       <td>
-                        <button onClick={() => likeCoin(coin.id)}>Like</button>
+                        <button className="primary" onClick={() => likeCoin(coin.id)}>Like</button>
                       </td>
                     </tr>
                   ))}
@@ -222,15 +267,15 @@ function App() {
 
             <div className="pagination-controls">
               <button
+                className="primary"
                 onClick={() => fetchCoins(currentPage - 1, searchQuery)}
                 disabled={currentPage <= 1}
               >
                 Previous
               </button>
-              <span>
-                Page {currentPage} of {totalPages}
-              </span>
+              <span>Page {currentPage} of {totalPages}</span>
               <button
+                className="primary"
                 onClick={() => fetchCoins(currentPage + 1, searchQuery)}
                 disabled={currentPage >= totalPages}
               >
