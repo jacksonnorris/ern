@@ -20,7 +20,7 @@ function App() {
   });
 
   const inactivityTimer = useRef(null);
-  const coinsPerPage = 50;
+  const coinsPerPage = 25;
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -79,7 +79,6 @@ function App() {
     axios
       .post('/login', { username })
       .then((response) => {
-        console.log(response.data.message);
         setIsLoggedIn(true);
         fetchCoins();
         setLikedCoins(response.data.likedCoins);
@@ -107,7 +106,6 @@ function App() {
     axios
       .get('/liked-coins')
       .then((response) => {
-        console.log('Fetched liked coins:', response.data);
         setLikedCoins(response.data);
       })
       .catch((error) => {
@@ -119,7 +117,6 @@ function App() {
     axios
       .post(`/like/${coinId}`)
       .then((response) => {
-        console.log(response.data.message);
         setLikedCoins(response.data.likedCoins);
       })
       .catch((error) => {
@@ -131,7 +128,6 @@ function App() {
     axios
       .delete(`/like/${coinId}`)
       .then((response) => {
-        console.log(response.data.message);
         setLikedCoins(response.data.likedCoins);
       })
       .catch((error) => {
