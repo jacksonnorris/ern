@@ -31,7 +31,7 @@ mongoose
     });
   })
   .catch((err) => {
-    console.error('MongoDB connection error:', err);
+    console.log(err);
   });
 
   const UserSchema = new mongoose.Schema({
@@ -107,7 +107,6 @@ app.get('/api/coins', async (req, res) => {
       totalPages: Math.ceil(filteredCoins.length / perPage),
     });
   } catch (error) {
-    console.error('Error fetching coins from CoinGecko:', error.message);
     res.status(500).json({ message: 'Failed to fetch coins' });
   }
 });
@@ -131,7 +130,6 @@ app.post('/login', async (req, res) => {
       likedCoins: user.likedCoins,
     });
   } catch (error) {
-    console.error('Error during login:', error);
     res.status(500).json({ message: 'Failed to log in' });
   }
 });
@@ -182,7 +180,6 @@ app.post('/like/:id', async (req, res) => {
 
     res.status(200).json({ likedCoins: user.likedCoins });
   } catch (error) {
-    console.error('Error liking coin:', error.message);
     res.status(500).json({ message: 'Failed to like coin' });
   }
 });
@@ -202,7 +199,6 @@ app.delete('/like/:id', async (req, res) => {
 
     res.status(200).json({ likedCoins: user.likedCoins });
   } catch (error) {
-    console.error('Error unliking coin:', error);
     res.status(500).json({ message: 'Failed to unlike coin' });
   }
 });
@@ -217,7 +213,6 @@ app.get('/liked-coins', async (req, res) => {
 
     res.status(200).json(user.likedCoins);
   } catch (error) {
-    console.error('Error fetching liked coins:', error);
     res.status(500).json({ message: 'Failed to fetch liked coins' });
   }
 });
@@ -225,7 +220,6 @@ app.get('/liked-coins', async (req, res) => {
 app.post('/logout', (req, res) => {
   req.session.destroy((err) => {
     if (err) {
-      console.error('Failed to destroy session:', err);
       return res.status(500).json({ message: 'Failed to logout' });
     }
     res.status(200).json({ message: 'Logged out successfully' });

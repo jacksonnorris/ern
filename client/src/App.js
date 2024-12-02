@@ -70,7 +70,6 @@ function App() {
         setLoading(false);
       })
       .catch((error) => {
-        console.error('Error fetching coins:', error.message);
         setLoading(false);
       });
   };
@@ -84,7 +83,7 @@ function App() {
         setLikedCoins(response.data.likedCoins);
       })
       .catch((error) => {
-        console.error('Login failed:', error.response?.data?.message || error.message);
+        console.log(error);
       });
   };
 
@@ -98,7 +97,7 @@ function App() {
         setCoins([]);
       })
       .catch((error) => {
-        console.error('Error logging out:', error);
+        console.log(error);
       });
   };
 
@@ -109,7 +108,7 @@ function App() {
         setLikedCoins(response.data);
       })
       .catch((error) => {
-        console.error('Error fetching liked coins:', error.response?.data?.message || error.message);
+        console.log(error);
       });
   };
 
@@ -120,7 +119,7 @@ function App() {
         setLikedCoins(response.data.likedCoins);
       })
       .catch((error) => {
-        console.error('Error liking coin:', error.response?.data?.message || error.message);
+        console.log(error);
       });
   };
 
@@ -131,7 +130,7 @@ function App() {
         setLikedCoins(response.data.likedCoins);
       })
       .catch((error) => {
-        console.error('Error unliking coin:', error.response?.data?.message || error.message);
+        console.log(error);
       });
   };
 
@@ -155,7 +154,7 @@ function App() {
         }
       })
       .catch((error) => {
-        console.error('Error checking session:', error);
+        console.log(error);
       });
   }, []);
 
