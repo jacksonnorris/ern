@@ -211,14 +211,14 @@ function App() {
                 <tbody>
                   {likedCoins.map((coin) => (
                     <tr key={coin.id}>
-                      <td>{coin.name}</td>
-                      <td>${coin.current_price ? coin.current_price.toFixed(2) : 'N/A'}</td>
-                      <td>${coin.market_cap ? coin.market_cap.toLocaleString() : 'N/A'}</td>
+                      <td className="name">{coin.name}</td>
+                      <td className="price">${coin.current_price ? coin.current_price.toFixed(2) : 'N/A'}</td>
+                      <td className="mcap">${coin.market_cap ? coin.market_cap.toLocaleString() : 'N/A'}</td>
                       <td className={coin.price_change_percentage_24h >= 0 ? 'positive-change' : 'negative-change'}>
                         {coin.price_change_percentage_24h ? `${coin.price_change_percentage_24h.toFixed(2)}%` : 'N/A'}
                       </td>
-                      <td>${coin.total_volume ? coin.total_volume.toLocaleString() : 'N/A'}</td>
-                      <td>{coin.circulating_supply ? coin.circulating_supply.toLocaleString() : 'N/A'}</td>
+                      <td className="vol">${coin.total_volume ? coin.total_volume.toLocaleString() : 'N/A'}</td>
+                      <td className="supply">{coin.circulating_supply ? coin.circulating_supply.toLocaleString() : 'N/A'}</td>
                       <td>
                         <button className="danger" onClick={() => unlikeCoin(coin.id)}>Unlike</button>
                       </td>
@@ -253,9 +253,9 @@ function App() {
                 <tbody>
                   {coins.map((coin) => (
                     <tr key={coin.id}>
-                      <td>{coin.name}</td>
-                      <td>${coin.current_price ? coin.current_price.toFixed(2) : 'N/A'}</td>
-                      <td>${coin.market_cap ? coin.market_cap.toLocaleString() : 'N/A'}</td>
+                      <td className="name">{coin.name}</td>
+                      <td className="price">${coin.current_price ? coin.current_price.toFixed(2) : 'N/A'}</td>
+                      <td className="mcap">${coin.market_cap ? coin.market_cap.toLocaleString() : 'N/A'}</td>
                       <td>
                         <button className="primary" onClick={() => likeCoin(coin.id)}>Like</button>
                       </td>

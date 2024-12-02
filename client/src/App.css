@@ -324,6 +324,7 @@ tbody td {
   
   button {
     width: 100%;
+    max-width: 666px;
   }
   
   .theme-toggle {
@@ -338,10 +339,49 @@ tbody td {
     width: calc(90vw - 25px);
   }
 
+  th {
+    display: none;
+  }
+
   tbody {
     display: flex;
     flex-direction: column;
     margin: 0 auto;
+  }
+
+  td.name::before {
+    content: 'Name: ';
+    font-weight: bold;
+  }
+
+  td.price::before {
+    content: 'Price: ';
+    font-weight: bold;
+  }
+
+  td.mcap::before {
+    content: 'Market Cap: ';
+    font-weight: bold;
+  }
+
+  td.vol::before {
+    content: 'Volume: ';
+    font-weight: bold;
+  }
+
+  td.supply::before {
+    content: 'Supply: ';
+    font-weight: bold;
+  }
+
+  td.positive-change::before {
+    content: 'Postive Change: ';
+    font-weight: bold;
+  }
+
+  td.negative-change::before {
+    content: 'Negative Change: ';
+    font-weight: bold;
   }
 
 }
