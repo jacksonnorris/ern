@@ -40,6 +40,7 @@ You can do this by following the code below, starting in the ern directory.
 - [Jack Norris](https://github.com/jacksonnorris)
 - [Danny Wang](https://github.com/dannywang0717)
 - [Hudson Shank](https://github.com/hudsonts)
+- [Kyle Manzoor](https://github.com/kylemanzoor)
 
 ## License
 
