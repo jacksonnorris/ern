@@ -38,7 +38,7 @@ You can do this by following the code below, starting in the ern directory.
 ## Authors
 
 - [Jack Norris](https://github.com/jacksonnorris)
-- [Dany Wang](https://github.com/dannywang0717)
+- [Danny Wang](https://github.com/dannywang0717)
 - [Hudson Shank](https://github.com/hudsonts)
 
 ## License

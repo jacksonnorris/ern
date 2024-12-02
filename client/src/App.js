@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import './App.css';
+import logo from './CryptoTrackerLogo.jpg'
 
 axios.defaults.baseURL = 'http://localhost:8080';
 axios.defaults.withCredentials = true;
@@ -173,20 +174,55 @@ function App() {
       </button>
 
       {!isLoggedIn ? (
-        <div className="login-container">
-          <h1>Login</h1>
-          <input
-            type="text"
-            placeholder="Enter username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
-          <button className="primary" onClick={login}>Login</button>
+        <div className="login-page">
+          <div className="login-split">
+            <div className="brand-side">
+              <div className="brand-content">
+              <div className="logo">
+                <img src={logo} alt="CryptoTracker Logo" className="crypto-logo" />
+                <h1>CryptoTracker</h1>
+              </div>
+                <div className="brand-description">
+                  <h2>Track Your Crypto Portfolio</h2>
+                  <p>Welcome to CryptoTracker, where real-time cryptocurrency tracking meets simplicity. Stay ahead of the market with live price updates, customizable watchlists, and comprehensive market data, all in one place!</p>
+                  <p>Current features include: </p>
+                  <ul className="feature-list">
+                    <li>Personalized watchlists</li>
+                    <li>Track market caps, volume, and supply in real time</li>
+                    <li>Live and reliable price updates with 24h trends</li>
+                    <li>Simple interface for beginners and experts</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div className="login-side">
+              <div className="login-form">
+                <h2>Login</h2>
+                <p>Enter your username to continue</p>
+                <div className="input-wrapper">
+                  <input
+                    type="text"
+                    placeholder="Username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="login-input"
+                  />
+                </div>
+                <button className="login-button" onClick={login}>
+                  Sign In
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       ) : (
         <div className="dashboard-container">
           <header>
-            <h1>Welcome, {username}!</h1>
+            <div className="header-left">
+              <img src={logo} alt="CryptoTracker Logo" className="dashboard-logo" />
+              <h1>Welcome, {username}!</h1>
+            </div>
             <button className="danger" onClick={logout}>Logout</button>
           </header>
 
